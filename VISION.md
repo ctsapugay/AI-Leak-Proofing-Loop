@@ -9,6 +9,12 @@
 - **Hardware:** ASUS Ascent GX10 (NVIDIA DGX Spark platform), GB10 Grace Blackwell, **128GB unified CPU/GPU memory**, **ARM64 CPU**, DGX OS (Ubuntu-based). Preloaded with **NVIDIA Nemotron 3.5 Lightning** (how it's served is TBD; check on the box). Setup guides: https://build.nvidia.com/spark
 - **Team:** college students, strong at AI-assisted coding, limited ML-internals experience. Explain non-obvious ML steps; prefer simple, robust code.
 
+## Box access (GX10)
+- Multi-user Linux: all 3 of us can SSH in **at the same time**. What we share is **GPU memory (128GB)**, not logins.
+- Connect: `ssh <user>@<hostname>.local` (same network) or over **Tailscale** if venue Wi-Fi blocks device-to-device traffic.
+- Rules: run long jobs in `tmux`. Check `nvidia-smi` before loading big models. **One shared Nemotron server** that everyone calls over HTTP. Announce LoRA training runs (peak memory).
+- UI / dashboard from a laptop: `ssh -L 7860:localhost:7860 <user>@<host>` (DGX Dashboard is on port 11000).
+
 ## One line
 A local system that **hardens an open model against leaking sensitive data**. It attacks the model, learns what a leak looks like *inside* the model, then fixes it at three levels: **detect (gate)**, **redirect while running (steering)**, and **permanently retrain (fine-tuning)**.
 
