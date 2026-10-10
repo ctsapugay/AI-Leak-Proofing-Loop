@@ -15,6 +15,17 @@
 - Rules: run long jobs in `tmux`. Check `nvidia-smi` before loading big models. **One shared Nemotron server** that everyone calls over HTTP. Announce LoRA training runs (peak memory).
 - UI / dashboard from a laptop: `ssh -L 7860:localhost:7860 <user>@<host>` (DGX Dashboard is on port 11000).
 
+## Box facts (verified Oct 10)
+- DGX OS 7.5 (Ubuntu, aarch64), GB10, CUDA 13.0, driver 580. User `asus`, hostname `0BU8`, Tailscale IP `100.65.248.49`.
+- **No PyTorch preinstalled** (`~/hf-env`, `~/venv` don't have it) → we install our own env.
+- **Ollama running** on `localhost:11434` (OpenAI-compatible API at `/v1`). Models: `nemotron3:33b` (27GB), `nemotron-3-super` (86GB), `qwen3.6:35b` (23GB), `gemma4:26b` (17GB).
+- **llama.cpp** `llama-server` launch scripts in `~` (port 8000) for Qwen3.6 / Gemma4 GGUFs.
+- Nemotron 3.5 Lightning **NVFP4** weights downloaded in `~/Downloads` (HF format; needs vLLM, not installed).
+- DGX Dashboard on `localhost:11000`. `asus` isn't in the docker group.
+- Don't run the firmware upgrades (return hardware unchanged).
+
+**Decision:** attacker + judge = **Ollama `nemotron3:33b`** (already served, zero setup). Upgrade to 3.5 Lightning via vLLM only if time allows. Avoid `qwen3.6` as judge (same family as the target).
+
 ## One line
 A local system that **hardens an open model against leaking sensitive data**. It attacks the model, learns what a leak looks like *inside* the model, then fixes it at three levels: **detect (gate)**, **redirect while running (steering)**, and **permanently retrain (fine-tuning)**.
 
