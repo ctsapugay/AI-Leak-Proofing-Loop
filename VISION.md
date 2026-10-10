@@ -239,6 +239,20 @@ We research the strategy taxonomy; Nemotron writes many specific prompts per str
 - Hidden states blocked → text-only loop: attacker swarm + LLM-judge scrubber + rounds loop with a growing rulebook prompt. Still fully local and demo-able.
 - Fine-tune too slow or doesn't help → cut it; keep gate + steering (steering is the centerpiece).
 
+## Who owns what
+| Owner | Owns | Why |
+|---|---|---|
+| **Clara: model internals** | HF target backend + hooks on the GX10 (hour 0) → activation cache → probe → gate → **steering** | All read or write the same activations; v̂ comes from the same cached means as the probe. Critical path. |
+| **Anthony: judge → fine-tune** | Tier-2 Nemotron judge + ~100-answer gold set (~first 6h) → **LoRA fine-tune** → evaluation table (none / keyword / gate / steer / LoRA) | Tier 1 is done; fine-tuning needs clean labels + steered answers. |
+| **Oleg: attacks + demo** | Nemotron-generated cases (frozen JSONL, ~1,000) → tune leak rate into the 20–50% band → UI → demo script + slides | Built the case format and runner; the UI *is* the demo. |
+
+**Contracts (agree early so no one blocks):**
+1. **Target interface:** `generate(messages, defense="none|gate|steer|lora") -> {text, tokens, per_token_risk}`. Clara ships a mock first so the UI can be built in parallel.
+2. **Label schema:** extend `answers.jsonl` with `tier`, `field`, `evidence_quote` so judge output feeds probe training directly.
+3. **GPU etiquette:** one shared Ollama Nemotron server; announce LoRA runs.
+
+**Milestones:** 0–2h: Clara gets HF Qwen-7B on the box and prints a hidden-state shape; Anthony has Nemotron judging over HTTP; Oleg has Nemotron writing attacks (check for refusals). ~8h: ~500 labeled answers with cached activations → probe training.
+
 ## Principles
 - Verify GX10 / Nemotron / library details on the actual machine; don't assume.
 - Get something running end to end early; improve incrementally.
@@ -248,7 +262,7 @@ We research the strategy taxonomy; Nemotron writes many specific prompts per str
 - [x] Target model: **Qwen2.5-7B-Instruct** (dev: Qwen2.5-1.5B-Instruct)
 - [ ] How Nemotron is served on the box (vLLM? BF16 or NVFP4?) + whether it refuses attacker prompts
 - [ ] UI framework (Gradio / Streamlit / custom web + Plotly)
-- [ ] Who owns what
+- [x] Who owns what (see "Who owns what")
 - [ ] Fine-tune data recipe (steered outputs vs. hand-written refusals vs. mix)
 - [x] Fixed vs. evolving attacker: fixed seed suite first; Nemotron-generated cases are frozen before use; adaptive (PAIR) is a stretch
 - [ ] Steering: single layer vs. window; projection vs. constant vs. probe-triggered
