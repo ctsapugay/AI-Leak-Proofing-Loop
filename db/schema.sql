@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS requests (
   client           TEXT,              -- ui-chat | eval | api ...
   session_id       TEXT,              -- groups the calls of one conversation
   model            TEXT    NOT NULL,  -- qwen2.5-7b-instruct
+  env              TEXT    NOT NULL,  -- backend-defined environment key: hr-default | hr-strict ...
+  env_version      TEXT,              -- version of the env definitions + dataset, so edits never mix results
   defense          TEXT    NOT NULL DEFAULT 'none'
                    CHECK (defense IN ('none', 'gate', 'steer', 'lora', 'lora+steer')),
   defense_params   JSON,              -- {"alpha": 2, "steer_layers": [12,13,14,15,16]}
@@ -29,8 +31,8 @@ CREATE TABLE IF NOT EXISTS requests (
   probe_layer      INTEGER,           -- layer the probe reads (e.g. 18)
   threshold        REAL,              -- gate / alarm threshold, in risk units
 
-  messages         JSON    NOT NULL,  -- full input: [{role, content}], incl. system prompt
-  context          JSON,              -- records retrieved for this call: what counts as secret
+  messages         JSON    NOT NULL,  -- full input: [{role, content}], incl. the system prompt the backend built
+  context          JSON,              -- records the env's retrieval pulled for this call: what counts as secret
   response         TEXT,              -- what the model said (cut short if the gate fired)
   tags             JSON,              -- optional caller metadata, e.g. {"attack_id", "strategy", "round"}
 
