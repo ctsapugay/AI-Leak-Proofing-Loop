@@ -1,0 +1,146 @@
+{
+  "n_leak": 72,
+  "n_benign": 48,
+  "skipped": 0,
+  "controls": [
+    {
+      "layer": 16,
+      "var_clean": 36.50382995605469,
+      "var_varmatch": [
+        36.676090240478516,
+        45.26511001586914
+      ],
+      "var_random": 0.16600936734153937
+    },
+    {
+      "layer": 17,
+      "var_clean": 42.07792282104492,
+      "var_varmatch": [
+        40.74977493286133,
+        30.642263412475586
+      ],
+      "var_random": 0.18895456158897214
+    },
+    {
+      "layer": 18,
+      "var_clean": 47.54134750366211,
+      "var_varmatch": [
+        45.75718307495117,
+        50.00308609008789
+      ],
+      "var_random": 0.2541936075031203
+    },
+    {
+      "layer": 19,
+      "var_clean": 57.8698844909668,
+      "var_varmatch": [
+        56.12030029296875,
+        62.93758773803711
+      ],
+      "var_random": 0.4960114066312616
+    },
+    {
+      "layer": 20,
+      "var_clean": 84.75475311279297,
+      "var_varmatch": [
+        83.11601257324219,
+        90.12381744384766
+      ],
+      "var_random": 0.3717152414250646
+    }
+  ],
+  "conditions": {
+    "clean_a1": {
+      "secret_factor": 0.831048450419898,
+      "benign_factor_per_token": 0.9852040921652808,
+      "secret_delta": -0.1850671820718967,
+      "benign_delta": -0.014906459105240433
+    },
+    "clean_a2": {
+      "secret_factor": 0.9306466339714332,
+      "benign_factor_per_token": 0.9790581668393032,
+      "secret_delta": -0.0718756291019802,
+      "benign_delta": -0.02116422367185802
+    },
+    "clean_a4": {
+      "secret_factor": 1.216610234863928e-07,
+      "benign_factor_per_token": 6.895198808093504e-07,
+      "secret_delta": -15.922027155411342,
+      "benign_delta": -14.187270306467605
+    },
+    "clean2_a1": {
+      "secret_factor": 0.849613364905224,
+      "benign_factor_per_token": 0.9881466969682073,
+      "secret_delta": -0.16297389779754104,
+      "benign_delta": -0.011924113543381807
+    },
+    "clean2_a2": {
+      "secret_factor": 0.8927700400839872,
+      "benign_factor_per_token": 0.9777912472862221,
+      "secret_delta": -0.11342624517174639,
+      "benign_delta": -0.02245908031330544
+    },
+    "clean2_a4": {
+      "secret_factor": 6.153894943402523e-08,
+      "benign_factor_per_token": 7.681180238251059e-07,
+      "secret_delta": -16.60359553846854,
+      "benign_delta": -14.07932243875021
+    },
+    "random_a1": {
+      "secret_factor": 1.0013089120265815,
+      "benign_factor_per_token": 0.9998056044640207,
+      "secret_delta": 0.0013080561479999924,
+      "benign_delta": -0.00019441443324060326
+    },
+    "random_a2": {
+      "secret_factor": 1.0019110369854232,
+      "benign_factor_per_token": 0.9982351700980168,
+      "secret_delta": 0.001909213277322741,
+      "benign_delta": -0.0017663890489642321
+    },
+    "random_a4": {
+      "secret_factor": 1.0010592182627918,
+      "benign_factor_per_token": 0.9926589836427181,
+      "secret_delta": 0.0010586576869409344,
+      "benign_delta": -0.007368094218597213
+    },
+    "varmatch0_a1": {
+      "secret_factor": 1.005762205480609,
+      "benign_factor_per_token": 0.9567783442433445,
+      "secret_delta": 0.005745667474455565,
+      "benign_delta": -0.04418352956684448
+    },
+    "varmatch0_a2": {
+      "secret_factor": 1.004734102209578,
+      "benign_factor_per_token": 0.9102019236293805,
+      "secret_delta": 0.004722931589078456,
+      "benign_delta": -0.09408880998787532
+    },
+    "varmatch0_a4": {
+      "secret_factor": 7.601284521112728e-07,
+      "benign_factor_per_token": 1.7971191387100812e-06,
+      "secret_delta": -14.089778402011733,
+      "benign_delta": -13.229325653690461
+    },
+    "varmatch1_a1": {
+      "secret_factor": 0.9242913196589879,
+      "benign_factor_per_token": 0.9820160588596315,
+      "secret_delta": -0.07872797601484777,
+      "benign_delta": -0.018147617543836175
+    },
+    "varmatch1_a2": {
+      "secret_factor": 0.9191448273920464,
+      "benign_factor_per_token": 0.8586845814441738,
+      "secret_delta": -0.08431157666845343,
+      "benign_delta": -0.15235361716052032
+    },
+    "varmatch1_a4": {
+      "secret_factor": 1.973851208895801e-08,
+      "benign_factor_per_token": 1.5564052766780707e-05,
+      "secret_delta": -17.74069418121467,
+      "benign_delta": -11.07054661253798
+    }
+  },
+  "bar": "secret <= x0.2 and benign >= x0.95 per token",
+  "passing_clean_settings": []
+}
