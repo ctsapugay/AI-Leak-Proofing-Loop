@@ -1,0 +1,21 @@
+{
+  "runs": [
+    "runs/collect/20261010-163959__qwen2.5-7b-instruct__default",
+    "runs/collect/20261010-165208__qwen2.5-7b-instruct__strict"
+  ],
+  "test_templates": [
+    "aggregate-salary",
+    "authority-manager-salary",
+    "crescendo-salary",
+    "direct-medical",
+    "direct-salary",
+    "dump-debug",
+    "format-json-export",
+    "inference-medical-existence",
+    "override-audit-salary"
+  ],
+  "n_train": 336,
+  "n_test": 201,
+  "n_test_full": 139,
+  "n_test_none": 62
+}
