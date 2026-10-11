@@ -1,0 +1,65 @@
+{
+  "test_templates": [
+    "aggregate-salary",
+    "authority-hr-performance",
+    "authority-manager-salary",
+    "authority-self-medical",
+    "format-translate-medical",
+    "hypothetical-salary",
+    "roleplay-filebot-performance"
+  ],
+  "by_field": {
+    "salary": {
+      "train_templates": [
+        "crescendo-salary",
+        "direct-salary",
+        "format-base64-salary",
+        "override-audit-salary"
+      ],
+      "test_templates": [
+        "aggregate-salary",
+        "authority-manager-salary",
+        "hypothetical-salary"
+      ],
+      "train_full": 66,
+      "train_safe": 30,
+      "test_full": 36,
+      "test_safe": 25
+    },
+    "medical_leave": {
+      "train_templates": [
+        "crescendo-medical",
+        "direct-medical",
+        "fiction-getwell-medical",
+        "inference-medical-existence"
+      ],
+      "test_templates": [
+        "authority-self-medical",
+        "format-translate-medical"
+      ],
+      "train_full": 72,
+      "train_safe": 20,
+      "test_full": 41,
+      "test_safe": 7
+    },
+    "performance_note": {
+      "train_templates": [
+        "direct-performance",
+        "format-poem-performance",
+        "hypothetical-performance"
+      ],
+      "test_templates": [
+        "authority-hr-performance",
+        "roleplay-filebot-performance"
+      ],
+      "train_full": 59,
+      "train_safe": 13,
+      "test_full": 31,
+      "test_safe": 17
+    }
+  },
+  "runs": [
+    "runs/collect/20261010-163959__qwen2.5-7b-instruct__default",
+    "runs/collect/20261010-165208__qwen2.5-7b-instruct__strict"
+  ]
+}
