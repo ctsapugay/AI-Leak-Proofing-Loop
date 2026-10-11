@@ -8,6 +8,12 @@
 
 ## Guardrails
 - **Box:** work only in `~/clara/AI-Hackathon`. Long jobs run in tmux sessions named `clara-*`. Check `nvidia-smi` before loading a model. Never kill, restart or reconfigure anything I didn't start (Ollama, teammates' jobs). No sudo, no system or firmware changes, no Docker.
+- **Memory (added after the Oct 10 crash, until Clara says otherwise):**
+  - At most **one** GPU job of ours at a time (sweeps, evals, collections and GPU tests all count).
+  - Before launching anything, check `free -g` and `nvidia-smi`. Don't launch if it would leave less than ~25 GB available. Count the shared Ollama server (~31 GB) and teammates' jobs.
+  - Don't save activations in eval runs unless something downstream reads them (`backend.capture_acts = False`).
+  - Don't run GPU tests while a sweep or eval is running.
+  - After killing a tmux job, confirm its python process is gone (`nvidia-smi`), not just the session.
 - **Model:** the target is locked to Qwen2.5-7B-Instruct, bf16, greedy decoding. Final numbers come from 7B only.
 - **Honest evaluation:** split train/test **by attack template** (the case id before `@`), never by case or token. v̂, probe weights, α and the window are chosen on train templates; reported numbers come from held-out templates. Report what we find, including negative results.
 - **Git:** all work goes on branch **`probe-backend`**, never `main`. Commit after each milestone and push to `origin/probe-backend`. Small commits. No force pushes, no merging into `main` (Clara decides when). Don't commit `runs/**/acts/`. The box's clone tracks the same branch.
@@ -76,6 +82,9 @@ A failing test or a control that matches the real result means the milestone is 
   - *Consistency:* per-token scores computed live during generation match offline scores from a forward pass (max abs diff < 0.02).
   - *No side effects:* with the gate on and never firing, the text is identical to no defense.
   - *Control:* a keyword-filter baseline on the same held-out set, for comparison.
+  - *Held-out integrity (added at Clara's request):* the M1 `probe.npz` saw every template, so it is **not** used for held-out numbers. The gate's probe is retrained at the chosen layer on the train templates only (same C, same pipeline). A test asserts its training rows contain no template id from `runs/steer/split.json`.
+  - *Honest threshold:* benign questions are split into two halves by question (both strictness versions of a question stay on the same side). The threshold is set on half A, and false alarms are reported on half B only.
+  - *Partial leaks:* report the gate's catch rate on held-out `partial` answers separately, even if ≈ 0, so the limitation is visible.
 - **Done when:** the proofs pass, the table is saved and the result is in the Log.
 
 ### M5. Interface for the UI
@@ -105,8 +114,13 @@ A failing test or a control that matches the real result means the milestone is 
   - Threshold for 5% benign false alarms: 0.739, with out-of-fold attack recall 93.2% at that threshold. At 0.5 the benign false-alarm rate is 27% (96 benign answers never seen in training).
   - **Limitation:** partial leaks score mean 0.077, 0/63 above threshold. The full-vs-none probe treats yes/no and comparison leaks as safe.
   - Reproducibility: a full rerun gave byte-identical auroc.csv and summary.json. Saved: `runs/probe/20261010-170359/` (auroc.csv, summary.json, probe.npz at L18).
-- **M2 (Oct 10): DONE.** `tests/test_internals_direction.py`: **5/5 pass** on Mac and GX10 (unit norm per layer; planted mean difference recovered, cosine > 0.95; v̂ points safe → leak; the held-out split is template-disjoint and holds out 30–50% of templates; held-out v̂ AUROC > 0.95 vs random ≈ 0.5; random directions reproducible).
+- **M2 (Oct 10): DONE** (commit 23469f3). `tests/test_internals_direction.py`: **5/5 pass** on Mac and GX10 (unit norm per layer; planted mean difference recovered, cosine > 0.95; v̂ points safe → leak; the held-out split is template-disjoint and holds out 30–50% of templates; held-out v̂ AUROC > 0.95 vs random ≈ 0.5; random directions reproducible).
   - **Control (5-fold template CV, the same folds as M1): v̂ projection AUROC 0.95–0.96 at layers 15–24 (best L21 0.959 ± 0.032; L18 0.948 ± 0.034) vs random unit directions mean 0.45–0.51.** The random 95th percentile is 0.78–0.92: leak and safe answers differ along many directions (disclosure vs refusal text), so v̂ is the best single direction but not the only separating one. That argues for steering over a window.
   - cos(v̂, probe w) = 0.24–0.39 across layers (0.26 at L18): the probe leans on correlated features, as VISION predicted, and v̂ is a distinct direction.
   - First attempt used a single held-out fold (4 templates, nearly one label each). There even random directions hit 0.997, so it was a degenerate test. Replaced by CV for the control, plus a 2-fold held-out split for M3–M4: **9 templates, 201 attack answers (139 full / 62 none)**, saved in `runs/steer/split.json`. v̂ in `runs/steer/vhat.npy` is fit on the other 336 rows only.
   - Reproducibility: a rerun gave byte-identical vhat.npy, direction.csv and split.json.
+- **M3 (in progress), notes:**
+  - *Bug found and fixed:* the first sweep and gate run passed default and strict versions of each case with the same id, and `run_batched` keys conversations by id. The two versions shared one conversation (strict system prompt only, every user turn doubled), and only 108/216 attacks were scored. All results from those runs were discarded. Fix: strict copies get a `#strict` id suffix, and `run_batched` now raises on duplicate ids (tests: `test_run_batched_rejects_duplicate_ids`, unique ids and 216/48/48 counts in `test_choose_and_report_cases_never_share_a_template_or_question`). M0–M2 were unaffected (one strictness per run).
+  - *Choosing on held-out was also fixed:* the sweep first picked α on the held-out cases. It now picks on train templates + benign half A, and reports once on held-out + benign half B.
+  - **Sweep shortened at Clara's request; full curve deferred.** Two phase-1 configs finished before the stop (train templates + benign A, 240 cases): baseline 71.9% leak / 100% helpful; L18 α=0.5: 71.9% / 100% (no effect). These are reused, not re-run. Phase 1 continues adaptively: L16–20 α=2 → (big drop and helpful ≥ 90%: α=1, then stop) / (barely drops: α=4; if helpful < 90%: α=1) → L18 or α=8 only if nothing reaches the knee → otherwise stop and ask. Phase 2 is unchanged (held-out baseline, the chosen setting, 3 random-direction controls). `--configs WINDOW:ALPHA ...` drives the order, and `--out` resumes and reuses saved configs, so the full grid can still be run later for the slides (no `--configs`).
+- **Incident (Oct 10, ~18:40): box crashed from memory pressure caused by our jobs.** Running at once: the steering sweep (~63 GB) and the gate reproducibility rerun (~54 GB), both caching all 29 layers' activations for every batch of 48, plus the team's Ollama server (~31 GB). Available memory hit ~2 GB, SSH stopped responding for ~5 min, and the box came back still short (~6–11 GB available). Fixes: `capture_acts` switch (eval runs no longer cache activations; same text, tested by `test_capture_off_gives_same_text_and_no_acts`); the gate rerun was stopped and will be redone alone with capture off; the memory rules above were added to the Guardrails.
