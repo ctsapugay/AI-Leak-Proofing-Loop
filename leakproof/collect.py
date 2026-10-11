@@ -28,12 +28,18 @@ from leakproof.target import build_system_prompt
 
 
 def run_batched(backend: HFBackend, cases: list[Case]) -> tuple[dict[str, CaseResult], dict[str, dict]]:
-    """Turn t of every case that has one goes in the same batch; replies are threaded back in."""
+    """Turn t of every case that has one goes in the same batch; replies are threaded back in.
+    Case ids must be unique: conversations are keyed by id."""
+    ids = [c.id for c in cases]
+    dupes = sorted({i for i in ids if ids.count(i) > 1})
+    if dupes:
+        raise ValueError(f"duplicate case ids would share a conversation: {dupes[:5]}")
     by_id = {e["id"]: e for e in load_employees()}
     convs = {c.id: [{"role": "system", "content": build_system_prompt(
         [by_id[i] for i in c.context_ids], c.strictness)}] for c in cases}
     replies: dict[str, list[str]] = {c.id: [] for c in cases}
     acts: dict[str, dict] = {}
+    gates: dict[str, list] = {c.id: [] for c in cases}  # per turn, when the gate is on
 
     start = time.perf_counter()
     for t in range(max(len(c.turns) for c in cases)):
@@ -45,11 +51,14 @@ def run_batched(backend: HFBackend, cases: list[Case]) -> tuple[dict[str, CaseRe
             convs[c.id].append({"role": "assistant", "content": g.text})
             replies[c.id].append(g.text)
             acts[c.id] = g.acts  # overwritten each turn, so the final turn's remain
+            gates[c.id].append(g.gate)
         print(f"  turn {t + 1}: {len(active)} cases, {time.perf_counter() - start:.0f}s elapsed", flush=True)
 
     per_case = (time.perf_counter() - start) / len(cases)
     results = {c.id: CaseResult(c, replies[c.id], judge_case(c, replies[c.id], by_id), None, per_case)
                for c in cases}
+    for cid in acts:
+        acts[cid] = {**acts[cid], "gate_turns": gates[cid]}
     return results, acts
 
 

@@ -172,3 +172,15 @@ def test_determinism(backend, conversations):
     for ga, gb in zip(a, b):
         for key in ga.acts:
             assert abs(ga.acts[key].astype("float32") - gb.acts[key].astype("float32")).max() < 1e-2
+
+
+@cuda
+def test_capture_off_gives_same_text_and_no_acts(backend, conversations):
+    with_acts = backend.generate_batch(conversations)
+    backend.capture_acts = False
+    try:
+        without = backend.generate_batch(conversations)
+    finally:
+        backend.capture_acts = True
+    assert [g.text for g in without] == [g.text for g in with_acts]
+    assert all(g.acts == {} for g in without)

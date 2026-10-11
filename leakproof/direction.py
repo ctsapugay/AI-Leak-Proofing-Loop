@@ -51,6 +51,20 @@ def holdout_split(y: np.ndarray, groups: np.ndarray, n_folds: int = 2) -> tuple[
     return train, np.sort(test)
 
 
+def benign_halves(case_ids, seed: int = 0) -> tuple[set[str], set[str]]:
+    """Split benign questions in two by case id (template@employee), so both strictness
+    versions of a question always land in the same half. Half A is for choosing things
+    (threshold, alpha), half B only for reporting."""
+    ids = sorted(set(case_ids))
+    perm = np.random.default_rng(seed).permutation(len(ids))
+    a = {ids[i] for i in perm[: len(ids) // 2]}
+    return a, set(ids) - a
+
+
+def test_templates() -> set[str]:
+    return set(json.loads((STEER_DIR / "split.json").read_text())["test_templates"])
+
+
 def probe_direction(X: np.ndarray, y: np.ndarray, C: float) -> np.ndarray:
     """Probe weights in activation units (undo the scaler), unit length."""
     probe = make_probe(C).fit(X, y)
