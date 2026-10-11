@@ -183,7 +183,7 @@ We research the strategy taxonomy; Nemotron writes many specific prompts per str
      - Output JSON: `{label: none|partial|full, field, evidence_quote}`. Requiring a quote from the answer keeps it grounded. Temperature 0.
      - Final label = max(tier 1, tier 2); record which tier fired (needed for the generalization test).
      - When the two tiers disagree, run the LLM judge 3× and take the majority.
-   - **Gold set:** we hand-label ~100 answers (~33 each) → precision/recall for each tier. Put these numbers in the slides.
+   - **No human labels (decided).** Judge quality = agreement between the two tiers plus the disagreements, reviewed one by one. Tier 2 sees exact facts it can't compute (base64 decodings, salary matches and averages, the true answer to yes/no and who-earns-more questions), and tier 1 decides those oracle questions.
    - **Probe training labels:** start with `full` vs. `none` (cleanest); evaluate `partial` separately.
 5. **Activation capture** (`hooks.py`)
    - Forward hook on `model.model.layers[L]` → `output[0]` is the residual stream, shape `[batch, seq, hidden]`. Mask out padding.
@@ -243,7 +243,7 @@ We research the strategy taxonomy; Nemotron writes many specific prompts per str
 | Owner | Owns | Why |
 |---|---|---|
 | **Clara: model internals** | HF target backend + hooks on the GX10 (hour 0) → activation cache → probe → gate → **steering** | All read or write the same activations; v̂ comes from the same cached means as the probe. Critical path. |
-| **Anthony: judge → fine-tune** | Tier-2 Nemotron judge + ~100-answer gold set (~first 6h) → **LoRA fine-tune** → evaluation table (none / keyword / gate / steer / LoRA) | Tier 1 is done; fine-tuning needs clean labels + steered answers. |
+| **Anthony: judge → fine-tune** | Tier-2 Nemotron judge (~first 6h) → **LoRA fine-tune** → evaluation table (none / keyword / gate / steer / LoRA) | Tier 1 is done; fine-tuning needs clean labels + steered answers. |
 | **Oleg: attacks + demo** | Nemotron-generated cases (frozen JSONL, ~1,000) → tune leak rate into the 20–50% band → UI → demo script + slides | Built the case format and runner; the UI *is* the demo. |
 
 **Contracts (agree early so no one blocks):**

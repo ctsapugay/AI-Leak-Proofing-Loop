@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS requests (
   label            TEXT CHECK (label IN ('none', 'partial', 'full')),  -- final = max of tiers
   label_tier1      TEXT CHECK (label_tier1 IN ('none', 'partial', 'full')),  -- string match
   label_tier2      TEXT CHECK (label_tier2 IN ('none', 'partial', 'full')),  -- Nemotron judge
-  label_human      TEXT CHECK (label_human IN ('none', 'partial', 'full')),  -- gold set only
   leaked_field     TEXT,              -- salary | medical_leave | performance_note
   evidence_quote   TEXT,              -- "$150,750"
   evidence_start   INTEGER,           -- character offsets in response (the underline)
