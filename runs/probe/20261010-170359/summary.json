@@ -1,0 +1,40 @@
+{
+  "runs": [
+    "runs/collect/20261010-163959__qwen2.5-7b-instruct__default",
+    "runs/collect/20261010-165208__qwen2.5-7b-instruct__strict"
+  ],
+  "C": 0.01,
+  "c_sweep": {
+    "0.001": 0.9725848584840506,
+    "0.01": 0.9755741075167375,
+    "0.1": 0.9756969411213351,
+    "1.0": 0.9778119497510497
+  },
+  "n_train": 537,
+  "n_full": 369,
+  "n_none": 168,
+  "n_templates": 23,
+  "best_answer_mean": {
+    "pooling": "answer_mean",
+    "layer": 18,
+    "auroc_mean": 0.9813406063453636,
+    "auroc_std": 0.02199862354822914,
+    "shuffled_mean": 0.5434380735636115,
+    "n_folds": 5
+  },
+  "best_last_prompt": {
+    "pooling": "last_prompt",
+    "layer": 19,
+    "auroc_mean": 0.8896266018959078,
+    "auroc_std": 0.04293577115553029,
+    "shuffled_mean": 0.46926458664084203,
+    "n_folds": 5
+  },
+  "threshold_5pct_benign_fa": 0.7386598587036133,
+  "oof_recall_at_threshold": 0.9322493224932249,
+  "benign_false_alarm_at_0.5": 0.2708333333333333,
+  "n_benign": 96,
+  "partial_mean_score": 0.07739711552858353,
+  "partial_frac_above_threshold": 0.0,
+  "n_partial": 63
+}

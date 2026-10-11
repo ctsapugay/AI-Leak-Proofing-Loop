@@ -90,11 +90,18 @@ A failing test or a control that matches the real result means the milestone is 
 ## Log
 <!-- One line per milestone: date, result, numbers, commit. -->
 - Setup: backend commit moved off `main` onto local branch `probe-backend` (not pushed yet).
-- **M0 (Oct 10): DONE.** `tests/test_internals_backend.py`: **7/7 pass on GX10**, 3 pass + 4 GPU-skipped on Mac (`uv run --with torch --with transformers --with numpy pytest tests/test_internals_backend.py`).
+- **M0 (Oct 10): DONE** (commit 3982a24). `tests/test_internals_backend.py`: **7/7 pass on GX10**, 3 pass + 4 GPU-skipped on Mac (`uv run --with torch --with transformers --with numpy pytest tests/test_internals_backend.py`).
   - Mask unit tests: stop mid-answer, stop then padding, empty answer (zeros, not NaN), no stop: pass.
   - Capture correctness: re-run forward vs hooks during `generate()` at layers 3/13/20, cosine > 0.999 for the last prompt token and the answer mean: pass.
   - Determinism: two runs give identical text, acts max abs diff < 1e-2: pass.
   - Batch invariance: first run **failed** (1/5 texts differed). Diagnosed as an exact greedy tie (top-2 log-probs both −0.693 for `:\n` vs `:\n\n`), flipped by bf16 padding noise. Test now: last_prompt cosine > 0.995 (measured min 0.9983), answer_mean likewise when texts match, and any text difference must be at a tie (top-2 gap < 0.1).
   - **Control:** the same check with the attention mask removed drops padded rows to cosine 0.79–0.85 (asserted < 0.945), so the test catches real padding bugs. A wrong-positions control did *not* separate (0.999 vs 0.999): RoPE is shift-invariant, so left-pad position offsets are harmless here.
-  - Runs: default 226/300 = 75% leak (192 full, 34 partial), 48/48 benign clean + helpful, 36/36 canaries. Strict 206/300 = 69% (177 full, 29 partial), 48/48, 36/36. Acts (384, 29, 3584) ×2 poolings ×2 runs, no NaN/inf/zero rows. Probe data: 369 full vs 145 none attack answers.
+  - Runs: default 226/300 = 75% leak (192 full, 34 partial), 48/48 benign clean + helpful, 36/36 canaries. Strict 206/300 = 69% (177 full, 29 partial), 48/48, 36/36. Acts (384, 29, 3584) ×2 poolings ×2 runs, no NaN/inf/zero rows. Probe data: 369 full vs 168 none attack answers (+63 partial).
   - Note: the last `hidden_states` index has the final RMSNorm applied (documented in `hf_target.py`).
+- **M1 (Oct 10): DONE.** `tests/test_internals_probe.py`: **8/8 pass** on Mac and GX10 (template-disjoint folds and every row tested once; planted direction AUROC > 0.95 and weight cosine > 0.8; shuffled labels and no-signal data within ±0.1 of 0.5; fixed seed gives identical scores; threshold and C rules).
+  - Data: 537 attack answers (369 full, 168 none), 23 templates, StratifiedGroupKFold(5) by template. C = 0.01 (strongest regularization within 0.005 of the best; sweep at L14: 0.973 / 0.976 / 0.976 / 0.978). C = 1.0 was abandoned because it pinned 20 CPU cores for ~90 min; 0.01 runs in 90 s with 8 threads.
+  - **answer_mean: best layer 18, AUROC 0.981 ± 0.022 vs shuffled 0.543.** Layers 13–22 all ≥ 0.975. Layer 0 (bag-of-words) gives 0.842, so part of the signal is lexical, and the middle layers add +0.14.
+  - **last_prompt (before any answer token): best layer 19, AUROC 0.890 ± 0.043 vs shuffled 0.469.** The model "knows" before writing. Layer 0 = 0.500 exactly (same final token for every prompt): a sanity check.
+  - Threshold for 5% benign false alarms: 0.739, with out-of-fold attack recall 93.2% at that threshold. At 0.5 the benign false-alarm rate is 27% (96 benign answers never seen in training).
+  - **Limitation:** partial leaks score mean 0.077, 0/63 above threshold. The full-vs-none probe treats yes/no and comparison leaks as safe.
+  - Reproducibility: a full rerun gave byte-identical auroc.csv and summary.json. Saved: `runs/probe/20261010-170359/` (auroc.csv, summary.json, probe.npz at L18).
